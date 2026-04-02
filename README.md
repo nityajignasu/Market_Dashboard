@@ -1,7 +1,7 @@
-#Market Intelligence Dashboard
+# Market Intelligence Dashboard
 
 
-by Nitya Jignasu
+# by Nitya Jignasu
 
 A live, interactive market intelligence dashboard built with vanilla HTML, CSS, and JavaScript. Pulls real-time financial data from the Finnhub API and runs entirely in the browser — no server, no build step, no dependencies to install.
 
