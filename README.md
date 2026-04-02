@@ -5,7 +5,7 @@
 
 A live, interactive market intelligence dashboard built with vanilla HTML, CSS, and JavaScript. Pulls real-time financial data from the Finnhub API and runs entirely in the browser — no server, no build step, no dependencies to install.
 
-Live Demo View Dashboard → 
+# Live Demo View Dashboard → 
 
 # Features
 # Overview Tab
@@ -28,9 +28,6 @@ Portfolio Stress Tester — simulate your equity/bond/cash allocation against CO
 Key Price Levels — support and resistance for major assets
 Market Catalysts — live news filtered for market-moving events
 
-
-# Tech Stack
-LayerChoiceFrontendVanilla HTML / CSS / JavaScriptDataFinnhub API (free tier)FontsDM Serif Display + DM Sans + DM MonoHostingGitHub PagesDependenciesNone
 
 # How It Works
 The dashboard connects to the Finnhub API to fetch live market prices. It is pre-configured with an API key — just open the live link above and it works immediately with no setup, no login, and no API key required from you.
