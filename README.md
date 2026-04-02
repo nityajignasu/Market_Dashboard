@@ -7,6 +7,8 @@ A Claude made live, interactive market intelligence dashboard built with vanilla
 
 # Live Demo View Dashboard → 
 
+
+
 # Features
 # Overview Tab
 
