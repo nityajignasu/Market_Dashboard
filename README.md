@@ -41,4 +41,6 @@ _This dashboard is built for educational purposes only. It is not financial advi
 
 # Related Projects
 Starbucks DCF Valuation — Scenario-based DCF model
+
+
 NVIDIA Monte Carlo Simulation — Python-based price simulation
