@@ -214,12 +214,34 @@ nav{
   border:none;border-radius:var(--r-sm);font-size:12px;font-family:var(--sans);font-weight:500;cursor:pointer;
 }
 .wl-add button:hover{opacity:.8}
-.wl-tbl{width:100%;border-collapse:collapse}
-.wl-tbl th{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;padding:5px 0;text-align:left;border-bottom:1px solid var(--border)}
+.wl-tbl{width:100%;border-collapse:collapse;table-layout:fixed}
+.wl-tbl th{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;padding:6px 8px 6px 0;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
 .wl-tbl th:not(:first-child){text-align:right}
-.wl-tbl td{padding:9px 0;border-bottom:1px solid var(--border);vertical-align:middle}
+.wl-tbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--border);vertical-align:middle;overflow:hidden}
 .wl-tbl tr:last-child td{border-bottom:none}
 .wl-tbl td:not(:first-child){text-align:right}
+.col-sym{width:14%}.col-price{width:16%}.col-chg{width:16%}.col-pct{width:13%}
+.col-spk{width:16%;text-align:center !important;padding-left:4px !important}
+.col-rsi{width:18%}.col-sma{width:10%}.col-sig{width:9%}
+.col-score{width:12%;padding-right:14px !important}
+.col-del{width:6%;text-align:right !important}
+/* Beginner column widths */
+#wlTableB .col-sym  { width:22% }
+#wlTableB .col-price{ width:20% }
+#wlTableB .col-chg  { width:18% }
+#wlTableB .col-pct  { width:16% }
+#wlTableB .col-spk  { width:18%;text-align:center }
+#wlTableB .col-del  { width:6% }
+/* Advanced column widths */
+#wlTableA .col-sym  { width:10% }
+#wlTableA .col-price{ width:12% }
+#wlTableA .col-pct  { width:10% }
+#wlTableA .col-rsi  { width:16% }
+#wlTableA .col-sma  { width:10% }
+#wlTableA .col-sig  { width:10% }
+#wlTableA .col-score{ width:12%;padding-right:12px }
+#wlTableA .col-spk  { width:14%;text-align:center }
+#wlTableA .col-del  { width:6% }
 .wl-sym{font-weight:500;font-size:13px;letter-spacing:.02em}
 .wl-co{font-size:11px;color:var(--dim);margin-top:1px}
 .wl-price{font-family:var(--serif);font-size:16px;color:var(--text)}
@@ -270,7 +292,7 @@ nav{
 .mini-fill{height:4px;border-radius:2px}
 
 /* ── Advanced watchlist cols ── */
-.rsi-cell{min-width:80px}
+.rsi-cell{min-width:0}
 .rsi-val{font-family:var(--mono);font-size:12px;font-weight:500}
 
 /* ── Regime ── */
@@ -327,7 +349,8 @@ nav{
 .chart-stat-label { font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;margin-bottom:2px }
 .chart-stat-val { font-family:var(--serif);font-size:20px;color:var(--text) }
 .chart-stat-chg { font-family:var(--mono);font-size:11px;font-weight:500 }
-.spark-cell canvas { display:block }
+.spark-cell { padding:0 4px !important; vertical-align:middle !important; text-align:center !important }
+.spark-cell canvas { display:inline-block;vertical-align:middle }
 
 /* ── Table scroll ── */
 .tbl-scroll{overflow-x:auto}
@@ -455,7 +478,7 @@ nav{
           <button onclick="addTicker('B')">+ Add</button>
         </div>
         <div class="tbl-scroll">
-          <table class="wl-tbl"><thead><tr><th>Symbol</th><th>Price</th><th>Change</th><th>% Chg</th><th>30D Trend</th><th></th></tr></thead>
+          <table class="wl-tbl" id="wlTableB"><colgroup><col class="col-sym"><col class="col-price"><col class="col-chg"><col class="col-pct"><col class="col-spk"><col class="col-del"></colgroup><thead><tr><th>Symbol</th><th>Price</th><th>Change</th><th>% Chg</th><th style="text-align:center">30D Trend</th><th></th></tr></thead>
           <tbody id="wlBodyB"></tbody></table>
         </div>
       </div>
@@ -509,7 +532,7 @@ nav{
         </div>
         <div class="tbl-scroll">
           <table class="wl-tbl">
-            <thead><tr><th>Symbol</th><th>Price</th><th>Chg%</th><th>RSI (14)</th><th>vs SMA50</th><th>Signal</th><th>Score</th><th>30D Trend</th><th></th></tr></thead>
+            <colgroup><col class="col-sym"><col class="col-price"><col class="col-pct"><col class="col-rsi"><col class="col-sma"><col class="col-sig"><col class="col-score"><col class="col-spk"><col class="col-del"></colgroup><thead><tr><th>Symbol</th><th>Price</th><th>Chg%</th><th>RSI (14)</th><th>vs SMA50</th><th>Signal</th><th>Score</th><th style="text-align:center">30D Trend</th><th></th></tr></thead>
             <tbody id="wlBodyA"></tbody>
           </table>
         </div>
@@ -838,12 +861,12 @@ function renderWLBeginner(quotes) {
     const sparkId = `spark_b_${sym}`;
     setTimeout(() => renderSparkline(sparkId, sym, q.c), 80 * i + 50);
     return `<tr>
-      <td><div class="wl-sym">${sym}</div></td>
-      <td><div class="wl-price">$${q.c.toFixed(2)}</div></td>
-      <td><span class="wl-chg ${dir}">${diff>=0?'+':''}$${Math.abs(diff).toFixed(2)}</span></td>
-      <td><span class="wl-chg ${dir}">${q.dp>=0?'+':''}${q.dp.toFixed(2)}%</span></td>
-      <td class="spark-cell"><canvas id="${sparkId}" width="90" height="34"></canvas></td>
-      <td><button class="wl-del" onclick="removeTicker(${i})">✕</button></td>
+      <td class="col-sym"><div class="wl-sym">${sym}</div></td>
+      <td class="col-price"><div class="wl-price">$${q.c.toFixed(2)}</div></td>
+      <td class="col-chg"><span class="wl-chg ${dir}">${diff>=0?'+':''}$${Math.abs(diff).toFixed(2)}</span></td>
+      <td class="col-pct"><span class="wl-chg ${dir}">${q.dp>=0?'+':''}${q.dp.toFixed(2)}%</span></td>
+      <td class="spark-cell col-spk"><canvas id="${sparkId}" width="100" height="36"></canvas></td>
+      <td class="col-del"><button class="wl-del" onclick="removeTicker(${i})">✕</button></td>
     </tr>`;
   }).join('');
 }
@@ -869,21 +892,21 @@ function renderWLAdvanced(quotes) {
     const sparkIdA = `spark_a_${sym}`;
     setTimeout(() => renderSparkline(sparkIdA, sym, q.c), 80 * i + 50);
     return `<tr>
-      <td><div class="wl-sym">${sym}</div></td>
-      <td><div class="wl-price">$${q.c.toFixed(2)}</div></td>
-      <td><span class="wl-chg ${dir}">${q.dp>=0?'+':''}${q.dp.toFixed(2)}%</span></td>
-      <td class="rsi-cell">
+      <td class="col-sym"><div class="wl-sym">${sym}</div></td>
+      <td class="col-price"><div class="wl-price">$${q.c.toFixed(2)}</div></td>
+      <td class="col-pct"><span class="wl-chg ${dir}">${q.dp>=0?'+':''}${q.dp.toFixed(2)}%</span></td>
+      <td class="col-rsi rsi-cell">
         <span class="rsi-val" style="color:${rsiC}">${rsi}</span>
         <span style="font-size:10px;color:var(--dim);margin-left:4px">${rsiLbl}</span>
         <div class="mini-bar"><div class="mini-fill" style="width:${rsi}%;background:${rsiC}"></div></div>
       </td>
-      <td><span style="font-family:var(--mono);font-size:12px;color:${smaC}">${vsSma>=0?'+':''}${vsSma}%</span></td>
-      <td><span class="tag ${scls}">${stag}</span></td>
-      <td style="min-width:56px">
+      <td class="col-sma"><span style="font-family:var(--mono);font-size:12px;color:${smaC}">${vsSma>=0?'+':''}${vsSma}%</span></td>
+      <td class="col-sig"><span class="tag ${scls}">${stag}</span></td>
+      <td class="col-score">
         <div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;margin-bottom:3px">${score}/100</div>
         <div class="mini-bar"><div class="mini-fill" style="width:${score}%;background:${fc}"></div></div>
       </td>
-      <td class="spark-cell"><canvas id="${sparkIdA}" width="90" height="34"></canvas></td>
+      <td class="spark-cell col-spk"><canvas id="${sparkIdA}" width="100" height="36"></canvas></td>
       <td><button class="wl-del" onclick="removeTicker(${i})">✕</button></td>
     </tr>`;
   }).join('');
@@ -1282,12 +1305,16 @@ function renderSparkline(canvasId, sym, currentPrice) {
     type: 'line',
     data: {
       labels: data.map((_,i) => i),
-      datasets: [{ data, borderColor:color, borderWidth:1.5, pointRadius:0, fill:false, tension:0.3 }]
+      datasets: [{ data, borderColor:color, borderWidth:1.8, pointRadius:0, fill:true, backgroundColor: isUp ? 'rgba(26,122,74,.07)' : 'rgba(184,50,50,.07)', tension:0.35 }]
     },
     options: {
-      responsive:false, animation:false,
+      responsive:false, animation:{duration:500},
       plugins:{legend:{display:false},tooltip:{enabled:false}},
-      scales:{x:{display:false},y:{display:false}}
+      scales:{
+        x:{display:false},
+        y:{display:false, grace:'10%'}
+      },
+      layout:{padding:{top:3,bottom:3,left:2,right:2}}
     }
   });
 }
