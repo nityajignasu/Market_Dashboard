@@ -314,6 +314,21 @@ nav{
   margin-bottom:1.75rem;letter-spacing:.02em;line-height:1.6;
 }
 
+
+/* ── Charts ── */
+.chart-card { background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:1.25rem }
+.chart-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem }
+.chart-toggles { display:flex;gap:3px }
+.chart-toggle { font-family:var(--mono);font-size:10px;padding:3px 10px;border:1px solid var(--border2);border-radius:3px;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.04em }
+.chart-toggle.active { background:var(--ink);color:var(--paper);border-color:var(--ink) }
+.chart-wrap { position:relative;width:100% }
+.chart-stat { display:flex;gap:1.5rem;margin-bottom:.85rem }
+.chart-stat-item { }
+.chart-stat-label { font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;margin-bottom:2px }
+.chart-stat-val { font-family:var(--serif);font-size:20px;color:var(--text) }
+.chart-stat-chg { font-family:var(--mono);font-size:11px;font-weight:500 }
+.spark-cell canvas { display:block }
+
 /* ── Table scroll ── */
 .tbl-scroll{overflow-x:auto}
 
@@ -373,6 +388,39 @@ nav{
     <!-- Pulse strip -->
     <div id="pulseStripB" class="pulse-strip"></div>
 
+    <!-- SPY Intraday Chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="card-eyebrow" style="margin-bottom:4px">S&amp;P 500 — SPY</div>
+          <div class="chart-stat">
+            <div class="chart-stat-item">
+              <div class="chart-stat-label">Last Price</div>
+              <div class="chart-stat-val" id="spyPriceLbl">—</div>
+            </div>
+            <div class="chart-stat-item">
+              <div class="chart-stat-label">Change</div>
+              <div class="chart-stat-chg" id="spyChgLbl">—</div>
+            </div>
+            <div class="chart-stat-item">
+              <div class="chart-stat-label">High</div>
+              <div id="spyHighLbl" style="font-family:var(--mono);font-size:12px;color:var(--green);padding-top:4px">—</div>
+            </div>
+            <div class="chart-stat-item">
+              <div class="chart-stat-label">Low</div>
+              <div id="spyLowLbl" style="font-family:var(--mono);font-size:12px;color:var(--red);padding-top:4px">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-toggles">
+          <button class="chart-toggle active" onclick="loadSpyChart('1D',this)">1D</button>
+          <button class="chart-toggle" onclick="loadSpyChart('5D',this)">5D</button>
+          <button class="chart-toggle" onclick="loadSpyChart('1M',this)">1M</button>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:200px"><canvas id="spyChart"></canvas></div>
+    </div>
+
     <div class="g12">
       <!-- Fear & Greed -->
       <div class="card">
@@ -407,7 +455,7 @@ nav{
           <button onclick="addTicker('B')">+ Add</button>
         </div>
         <div class="tbl-scroll">
-          <table class="wl-tbl"><thead><tr><th>Symbol</th><th>Price</th><th>Change</th><th>% Chg</th><th></th></tr></thead>
+          <table class="wl-tbl"><thead><tr><th>Symbol</th><th>Price</th><th>Change</th><th>% Chg</th><th>30D Trend</th><th></th></tr></thead>
           <tbody id="wlBodyB"></tbody></table>
         </div>
       </div>
@@ -461,7 +509,7 @@ nav{
         </div>
         <div class="tbl-scroll">
           <table class="wl-tbl">
-            <thead><tr><th>Symbol</th><th>Price</th><th>Chg%</th><th>RSI (14)</th><th>vs SMA50</th><th>Signal</th><th>Score</th><th></th></tr></thead>
+            <thead><tr><th>Symbol</th><th>Price</th><th>Chg%</th><th>RSI (14)</th><th>vs SMA50</th><th>Signal</th><th>Score</th><th>30D Trend</th><th></th></tr></thead>
             <tbody id="wlBodyA"></tbody>
           </table>
         </div>
@@ -497,7 +545,8 @@ nav{
         <div class="stress-group"><label>Bonds <span id="bondV">30%</span></label><input type="range" min="0" max="100" value="30" step="5" oninput="calcStress()"></div>
         <div class="stress-group"><label>Cash <span id="cashV">10%</span></label><input type="range" min="0" max="100" value="10" step="5" oninput="calcStress()"></div>
       </div>
-      <div class="stress-scenarios" id="stressOut"></div>
+      <div id="stressSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem"></div>
+      <div class="chart-wrap" style="height:180px"><canvas id="stressChart"></canvas></div>
     </div>
 
     <div class="g2">
@@ -584,6 +633,7 @@ window.onload = () => {
   renderWLAdvanced(instant);
   renderNews();
   if (OWNER_KEY || KEY || DEMO) { closeModal(); boot(); }
+  setTimeout(() => loadSpyChart('1D', null), 350);
 };
 
 function boot() {
@@ -785,11 +835,14 @@ function renderWLBeginner(quotes) {
     if (!q) return `<tr><td><div class="wl-sym">${sym}</div></td><td colspan="4"><span class="loading">···</span></td></tr>`;
     const dir  = q.dp >= 0 ? 'up' : 'down';
     const diff = (q.c - q.pc);
+    const sparkId = `spark_b_${sym}`;
+    setTimeout(() => renderSparkline(sparkId, sym, q.c), 80 * i + 50);
     return `<tr>
       <td><div class="wl-sym">${sym}</div></td>
       <td><div class="wl-price">$${q.c.toFixed(2)}</div></td>
       <td><span class="wl-chg ${dir}">${diff>=0?'+':''}$${Math.abs(diff).toFixed(2)}</span></td>
       <td><span class="wl-chg ${dir}">${q.dp>=0?'+':''}${q.dp.toFixed(2)}%</span></td>
+      <td class="spark-cell"><canvas id="${sparkId}" width="90" height="34"></canvas></td>
       <td><button class="wl-del" onclick="removeTicker(${i})">✕</button></td>
     </tr>`;
   }).join('');
@@ -813,6 +866,8 @@ function renderWLAdvanced(quotes) {
     const score  = Math.round(Math.max(5,Math.min(95, 50 + q.dp*5.5 + (Math.random()-.3)*18)));
     const [stag,scls] = score>=65 ? ['BUY','tag-green'] : score<=35 ? ['SELL','tag-red'] : ['HOLD','tag-dim'];
     const fc = score>=65?'var(--green)':score<=35?'var(--red)':'var(--gold)';
+    const sparkIdA = `spark_a_${sym}`;
+    setTimeout(() => renderSparkline(sparkIdA, sym, q.c), 80 * i + 50);
     return `<tr>
       <td><div class="wl-sym">${sym}</div></td>
       <td><div class="wl-price">$${q.c.toFixed(2)}</div></td>
@@ -828,6 +883,7 @@ function renderWLAdvanced(quotes) {
         <div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;margin-bottom:3px">${score}/100</div>
         <div class="mini-bar"><div class="mini-fill" style="width:${score}%;background:${fc}"></div></div>
       </td>
+      <td class="spark-cell"><canvas id="${sparkIdA}" width="90" height="34"></canvas></td>
       <td><button class="wl-del" onclick="removeTicker(${i})">✕</button></td>
     </tr>`;
   }).join('');
@@ -997,15 +1053,25 @@ function calcStress() {
     {label:'Dot-com (2000)',eq:-49,bond:14, cash:4,  sub:'-49% equities'},
     {label:'10% Correction',eq:-10,bond:3,  cash:.5, sub:'-10% equities'},
   ];
-  document.getElementById('stressOut').innerHTML = sc.map(s => {
+  // Compute scenario returns
+  const computed = sc.map(s => {
     const r = (eq/t*s.eq + bond/t*s.bond + cash/t*s.cash)/100;
-    const c = r >= 0 ? 'var(--green)' : 'var(--red)';
+    return {...s, r};
+  });
+
+  // Summary cards
+  const sumEl = document.getElementById('stressSummary');
+  if (sumEl) sumEl.innerHTML = computed.map(s => {
+    const c = s.r >= 0 ? 'var(--green)' : 'var(--red)';
     return `<div class="stress-card">
       <div class="stress-sc-label">${s.label}</div>
-      <div class="stress-sc-val" style="color:${c}">${r>=0?'+':''}${(r*100).toFixed(1)}%</div>
+      <div class="stress-sc-val" style="color:${c}">${s.r>=0?'+':''}${(s.r*100).toFixed(1)}%</div>
       <div class="stress-sc-sub">${s.sub}</div>
     </div>`;
   }).join('');
+
+  // Bar chart
+  if (typeof renderStressChart === 'function') renderStressChart(computed);
 }
 
 // ═══════════════════════════
@@ -1033,5 +1099,253 @@ function switchTab(name, btn) {
   btn.classList.add('active');
 }
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ═══════════════════════════════════════════
+// CHART GLOBALS
+// ═══════════════════════════════════════════
+let spyChartInst  = null;
+let stressChartInst = null;
+let sparkInsts    = {};
+let spyMode       = '1D';
+const CHART_GREEN = '#1a7a4a';
+const CHART_RED   = '#b83232';
+const CHART_MUTED = '#a8a49e';
+const CHART_GRID  = 'rgba(0,0,0,0.05)';
+
+// ── SPY Intraday Chart ───────────────────────────────────────────────────
+async function fetchSpyCandles(mode) {
+  const now   = Math.floor(Date.now()/1000);
+  const mktOpen = getMarketOpen();
+  let from, resolution;
+  if (mode === '1D') { from = mktOpen; resolution = '5'; }
+  else if (mode === '5D') { from = now - 5*24*3600; resolution = '15'; }
+  else { from = now - 30*24*3600; resolution = 'D'; }
+
+  if (DEMO || !KEY) return genDemoCandles(mode);
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch(
+      `https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=${resolution}&from=${from}&to=${now}&token=${KEY}`,
+      {signal: ctrl.signal}
+    );
+    const d = await r.json();
+    if (d.s === 'ok' && d.c && d.c.length > 0) return d;
+    return genDemoCandles(mode);
+  } catch { return genDemoCandles(mode); }
+}
+
+function getMarketOpen() {
+  const now = new Date();
+  const ny  = new Date(now.toLocaleString('en-US', {timeZone:'America/New_York'}));
+  ny.setHours(9,30,0,0);
+  return Math.floor(ny.getTime()/1000);
+}
+
+function genDemoCandles(mode) {
+  const base = DQ['SPY'] ? DQ['SPY'].c : 524;
+  const count = mode === '1D' ? 78 : mode === '5D' ? 130 : 30;
+  const labels = [], closes = [], highs = [], lows = [];
+  let price = base - (Math.random()*4);
+  const now = new Date();
+
+  for (let i = 0; i < count; i++) {
+    price += (Math.random()-.47) * (mode === 'D' ? 3.5 : mode === '5D' ? 1.8 : 1.1);
+    price  = Math.max(price, base * .92);
+    const h = price + Math.random() * 1.2;
+    const l = price - Math.random() * 1.2;
+    closes.push(+price.toFixed(2));
+    highs.push(+h.toFixed(2));
+    lows.push(+l.toFixed(2));
+
+    if (mode === '1D') {
+      const mins = 9*60+30 + i*5;
+      labels.push(`${Math.floor(mins/60)}:${String(mins%60).padStart(2,'0')}`);
+    } else if (mode === '5D') {
+      const d = new Date(now); d.setDate(d.getDate() - 5 + Math.floor(i/26));
+      labels.push(d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}));
+    } else {
+      const d = new Date(now); d.setDate(d.getDate() - (count - i));
+      labels.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+    }
+  }
+  return {c:closes, h:highs, l:lows, t:labels};
+}
+
+async function loadSpyChart(mode, btn) {
+  spyMode = mode;
+  if (btn) {
+    document.querySelectorAll('.chart-toggle').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const data = await fetchSpyCandles(mode);
+  if (!data || !data.c || !data.c.length) return;
+
+  const labels = data.t.map ? data.t.map((ts, i) => {
+    if (typeof ts === 'string') return ts;
+    const d = new Date(ts * 1000);
+    if (mode === '1D') return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  }) : data.t;
+
+  const closes = data.c;
+  const first  = closes[0];
+  const last   = closes[closes.length-1];
+  const high   = Math.max(...data.h || closes);
+  const low    = Math.min(...data.l || closes);
+  const isUp   = last >= first;
+  const color  = isUp ? CHART_GREEN : CHART_RED;
+  const change = last - first;
+  const changePct = ((change / first)*100).toFixed(2);
+
+  // Update stats
+  const priceEl = document.getElementById('spyPriceLbl');
+  const chgEl   = document.getElementById('spyChgLbl');
+  const hiEl    = document.getElementById('spyHighLbl');
+  const loEl    = document.getElementById('spyLowLbl');
+  if (priceEl) priceEl.textContent = '$' + last.toFixed(2);
+  if (chgEl)   { chgEl.textContent = `${change>=0?'+':''}${change.toFixed(2)} (${change>=0?'+':''}${changePct}%)`; chgEl.style.color = color; }
+  if (hiEl)    hiEl.textContent = '$' + high.toFixed(2);
+  if (loEl)    loEl.textContent = '$' + low.toFixed(2);
+
+  const ctx = document.getElementById('spyChart');
+  if (!ctx) return;
+  if (spyChartInst) { spyChartInst.destroy(); spyChartInst = null; }
+
+  // Reduce label density
+  const skip = Math.max(1, Math.floor(labels.length / 8));
+  const sparseLabels = labels.map((l,i) => i % skip === 0 ? l : '');
+
+  spyChartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: sparseLabels,
+      datasets: [{
+        data: closes,
+        borderColor: color,
+        borderWidth: 1.8,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: (ctx) => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,180);
+          g.addColorStop(0, isUp ? 'rgba(26,122,74,.12)' : 'rgba(184,50,50,.12)');
+          g.addColorStop(1, 'rgba(255,255,255,0)');
+          return g;
+        },
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false}, tooltip:{
+        callbacks: { label: c => ' $' + c.parsed.y.toFixed(2) },
+        backgroundColor: '#fff', titleColor:'#0c0c0c', bodyColor:'#6b6860',
+        borderColor:'rgba(0,0,0,.1)', borderWidth:1, padding:8,
+        titleFont:{family:"'DM Serif Display',serif"}, bodyFont:{family:"'DM Mono',monospace",size:11}
+      }},
+      scales: {
+        x: { ticks:{color:CHART_MUTED,font:{size:10,family:"'DM Mono',monospace"},maxRotation:0}, grid:{display:false}, border:{display:false} },
+        y: { ticks:{color:CHART_MUTED,font:{size:10,family:"'DM Mono',monospace"}, callback: v=>'$'+v.toFixed(0)}, grid:{color:CHART_GRID}, border:{display:false}, position:'right' }
+      }
+    }
+  });
+}
+
+// ── Watchlist Sparklines ─────────────────────────────────────────────────
+function genSparkData(sym) {
+  const base = DQ[sym] ? DQ[sym].c : 100 + Math.random()*200;
+  const pts  = [];
+  let p = base * (.90 + Math.random()*.05);
+  for (let i = 0; i < 30; i++) {
+    p += (Math.random()-.47) * p * .015;
+    pts.push(+p.toFixed(2));
+  }
+  // End near current price
+  pts.push(base);
+  return pts;
+}
+
+function renderSparkline(canvasId, sym, currentPrice) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (sparkInsts[canvasId]) { sparkInsts[canvasId].destroy(); delete sparkInsts[canvasId]; }
+
+  const data  = genSparkData(sym);
+  // Replace last point with current price
+  data[data.length-1] = currentPrice || data[data.length-1];
+  const isUp  = data[data.length-1] >= data[0];
+  const color = isUp ? CHART_GREEN : CHART_RED;
+
+  sparkInsts[canvasId] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: data.map((_,i) => i),
+      datasets: [{ data, borderColor:color, borderWidth:1.5, pointRadius:0, fill:false, tension:0.3 }]
+    },
+    options: {
+      responsive:false, animation:false,
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{display:false},y:{display:false}}
+    }
+  });
+}
+
+// ── Stress Test Chart ────────────────────────────────────────────────────
+function renderStressChart(scenarios) {
+  const ctx = document.getElementById('stressChart');
+  if (!ctx) return;
+  if (stressChartInst) { stressChartInst.destroy(); stressChartInst = null; }
+
+  const labels = scenarios.map(s => s.label);
+  const vals   = scenarios.map(s => +(s.r*100).toFixed(1));
+  const colors = vals.map(v => v >= 0 ? CHART_GREEN : CHART_RED);
+  const bgColors = vals.map(v => v >= 0 ? 'rgba(26,122,74,.12)' : 'rgba(184,50,50,.12)');
+
+  stressChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: vals,
+        backgroundColor: bgColors,
+        borderColor: colors,
+        borderWidth: 1.5,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins: {
+        legend:{display:false},
+        tooltip:{
+          callbacks:{ label: c => ` ${c.parsed.x>=0?'+':''}${c.parsed.x.toFixed(1)}%` },
+          backgroundColor:'#fff', titleColor:'#0c0c0c', bodyColor:'#6b6860',
+          borderColor:'rgba(0,0,0,.1)', borderWidth:1, padding:8,
+          bodyFont:{family:"'DM Mono',monospace",size:11}
+        }
+      },
+      scales: {
+        x: {
+          ticks:{ color:CHART_MUTED, font:{size:10,family:"'DM Mono',monospace"}, callback:v=>`${v>0?'+':''}${v}%` },
+          grid:{ color:CHART_GRID }, border:{display:false},
+          min: Math.min(...vals)*1.15 - 2
+        },
+        y: {
+          ticks:{ color:'#0c0c0c', font:{size:12,family:"'DM Sans',sans-serif"} },
+          grid:{display:false}, border:{display:false}
+        }
+      }
+    }
+  });
+}
+
+// ── Init charts on load ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => loadSpyChart('1D', null), 400);
+});
+</script>
+
 </body>
 </html>
