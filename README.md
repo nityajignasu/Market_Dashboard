@@ -3,7 +3,7 @@
 
 # by Nitya Jignasu
 
-This started as a university assignment on designing an ML-enhanced trading strategy. After submitting it, I kept going — curious about how far ML could actually be pushed in financial markets, how parameters affect model behaviour, and what a real trading strategy would look like as a live product. That curiosity turned into a conversation with Claude AI, which turned into this dashboard. Every product decision, analytical direction, and feature choice was mine. Claude handled the implementation.
+This started as a university assignment on designing an ML-enhanced trading strategy. After submitting it, I kept going, curious about how far ML could actually be pushed in financial markets, how parameters affect model behaviour, and what a real trading strategy would look like as a live product. That curiosity turned into a conversation with Claude AI, which turned into this dashboard. Every product decision, analytical direction, and feature choice was mine. Claude handled the implementation.
 
 # Live Demo View Dashboard → https://nityajignasu.github.io/Market_Dashboard/ 
 
