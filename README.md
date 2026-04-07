@@ -40,7 +40,7 @@ Prices refresh automatically every 30 seconds. Your personal watchlist is saved 
 _This dashboard is built for educational purposes only. It is not financial advice and should not be used as the basis for any real investment decisions. Data may be delayed. Signals (RSI, ML scores) are algorithmically generated and unverified. Always consult a licensed financial advisor before investing._
 
 # Related Projects
-Starbucks DCF Valuation — Scenario-based DCF model
+Starbucks DCF Valuation — https://github.com/nityajignasu/Projects/blob/main/DCF%20Scenario%20Analysis%20-%20STARBUCKS.xlsx  
 
 
-NVIDIA Monte Carlo Simulation — Python-based price simulation
+NVIDIA Monte Carlo Simulation — https://github.com/nityajignasu/Projects/blob/main/Monte%20Carlo%20Simulation%20NVIDIA.ipynb 
